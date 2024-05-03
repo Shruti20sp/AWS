@@ -3,13 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const app = express();
-const PORT = 3000; // You can change this to any port you prefer
+const PORT =3000; // You can change this to any port you prefer
 
-// MongoDB connection
-mongoose.connect('mongodb://localhost/student', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
+// // MongoDB connection
+// mongoose.connect(process.env.MONGO_URL, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true
+// })
+mongoose.connect('mongodb://localhost/student', { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => {
   console.log('MongoDB connected');
 }).catch((err) => {
   console.error('MongoDB connection error:', err);
@@ -186,17 +188,57 @@ app.delete('/removeJohnDocument', async (req, res) => {
     }
   });
   
-//j]
-// Route to render HTML page with student data
-app.get('/display', async (req, res) => {
-    try {
-      const students = await StudentMarks.find();
-      res.render('index', { students });
-    } catch (error) {
-      res.status(500).send('Error fetching students');
-    }
-  });
+// //j]
+// // Route to render HTML page with student data
+// app.get('/display', async (req, res) => {
+//     try {
+//       const students = await StudentMarks.find();
+//       res.render('index', { students });
+//     } catch (error) {
+//       res.status(500).send('Error fetching students');
+//     }
+//   });
   
+app.get("/displayAllStudentsInTable", async function (request, response) {
+  try {
+      const students = await StudentMarks.find();
+
+      // Creating table view for browser
+      let html = "<table border=1 style='border-collapse: collapse'>"; // Style tag is used to avoid double border on table
+
+      // Creating headers
+      html += `<tr>
+          <th>Name</th>
+          <th>Roll_No</th>
+          <th>WAD_Marks</th>
+          <th>CC_Marks</th>
+          <th>DSBDA_Marks</th>
+          <th>CNS_Marks</th>
+          <th>AI_Marks</th>
+      </tr>`;
+
+      // Iterating through students array and creating table rows
+      students.forEach(function (student) {
+          html += "<tr>";
+          html += "<td>" + student.Name + "</td>";
+          html += "<td>" + student.Roll_No + "</td>";
+          html += "<td>" + student.WAD_Marks + "</td>";
+          html += "<td>" + student.CC_Marks + "</td>";
+          html += "<td>" + student.DSBDA_Marks + "</td>";
+          html += "<td>" + student.CNS_Marks + "</td>";
+          html += "<td>" + student.AI_marks + "</td>";
+          html += "</tr>";
+      });
+
+      html += "</table>";
+
+      response.send(html);
+  } catch (error) {
+      console.error("Error fetching and displaying students:", error);
+      response.status(500).send("Error fetching and displaying students");
+  }
+});
+
   // Set the view engine to render HTML files
   app.engine('html', require('ejs').renderFile);
   app.set('view engine', 'html');
